@@ -6,7 +6,7 @@ services:
       POSTGRES_PASSWORD: "root"
       POSTGRES_DB: "ny_taxi"
     volumes:
-      - "ny_taxi_postgres_data:/var/lib/postgresql"
+      - ny_taxi_postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
 
@@ -16,11 +16,25 @@ services:
       PGADMIN_DEFAULT_EMAIL: "admin@admin.com"
       PGADMIN_DEFAULT_PASSWORD: "root"
     volumes:
-      - "pgadmin_data:/var/lib/pgadmin"
+      - pgadmin_data:/var/lib/pgadmin
     ports:
       - "8085:80"
+    depends_on:
+      - pgdatabase
 
+  ingest:
+    build: .
+    depends_on:
+      - pgdatabase
+    command: ["ingest_data.py", "--pg-host", "pgdatabase", "--year", "2021", "--month", "1"]
+    restart: "no"
 
+  ingest_zones:
+    build: .
+    depends_on:
+      - pgdatabase
+    command: ["ingest_data_zones.py", "--pg-host", "pgdatabase"]
+    restart: "no"
 
 volumes:
   ny_taxi_postgres_data:
